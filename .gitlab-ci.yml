@@ -13,7 +13,7 @@ deploy:
   tags:
     - docker
   only:
-    - develop
+    - master
   before_script:
     - gem install dpl
   script:
@@ -31,4 +31,4 @@ deploy:
     - dpl --provider=heroku --app=ldssa-gs --api-key=$HEROKU_PROD_API_KEY
   when: manual
   only:
-  - master
+    - master
