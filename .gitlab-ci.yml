@@ -1,0 +1,34 @@
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  script: echo "Running tests"
+
+deploy:
+  stage: deploy
+  image: 'ruby:latest'
+  type: deploy
+  tags:
+    - docker
+  only:
+    - develop
+  before_script:
+    - gem install dpl
+  script:
+    - dpl --provider=heroku --app=ldssa-gs-staging --api-key=$HEROKU_STAGING_API_KEY
+
+deploy:
+  stage: deploy
+  image: 'ruby:latest'
+  type: deploy
+  tags:
+    - docker
+  before_script:
+    - gem install dpl
+  script:
+    - dpl --provider=heroku --app=ldssa-gs --api-key=$HEROKU_PROD_API_KEY
+  when: manual
+  only:
+  - master
