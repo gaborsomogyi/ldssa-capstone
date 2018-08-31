@@ -6,7 +6,7 @@ test:
   stage: test
   script: echo "Running tests"
 
-deploy:
+deploy_staging:
   stage: deploy
   image: 'ruby:latest'
   type: deploy
@@ -19,7 +19,7 @@ deploy:
   script:
     - dpl --provider=heroku --app=ldssa-gs-staging --api-key=$HEROKU_STAGING_API_KEY
 
-deploy:
+deploy_production:
   stage: deploy
   image: 'ruby:latest'
   type: deploy
