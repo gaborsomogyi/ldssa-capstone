@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+scipy = "*"
+scikit-learn = "*"
+pandas = "*"
+gunicorn = "*"
+peewee = "*"
+"psycopg2" = "*"
+Flask = "*"
+category_encoders = "==1.2.6"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"

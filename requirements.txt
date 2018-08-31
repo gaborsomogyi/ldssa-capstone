@@ -1,0 +1,8 @@
+scipy
+scikit-learn
+pandas
+flask
+gunicorn
+peewee
+psycopg2
+category-encoders==1.2.6
