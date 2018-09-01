@@ -8,6 +8,7 @@ test:
   script: echo "Running tests"
 
 deploy_staging:
+  stage: deploy_staging
   image: 'ruby:latest'
   tags:
     - docker
@@ -19,9 +20,10 @@ deploy_staging:
     - dpl --provider=heroku --app=ldssa-gs-staging --api-key=$HEROKU_STAGING_API_KEY
 
 deploy_production:
+  stage: deploy_production
   image: 
     name: wingrunr21/alpine-heroku-cli:latest
-    entrypoint: ["/bin/sh"]
+    entrypoint: ["/bin/sh", "-c"]
   variables:
     HEROKU_API_KEY: $HEROKU_PRODUCTION_API_KEY
   tags:
