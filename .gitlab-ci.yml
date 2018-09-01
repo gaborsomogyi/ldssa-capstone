@@ -12,12 +12,14 @@ deploy_staging:
   image: 'ruby:latest'
   tags:
     - docker
-  only:
-    - master
   before_script:
     - gem install dpl
   script:
     - dpl --provider=heroku --app=ldssa-gs-staging --api-key=$HEROKU_STAGING_API_KEY
+  only:
+    - master
+  environment:
+    name: staging
 
 deploy_production:
   stage: deploy_production
@@ -33,3 +35,5 @@ deploy_production:
   when: manual
   only:
     - master
+  environment: 
+    name: production
