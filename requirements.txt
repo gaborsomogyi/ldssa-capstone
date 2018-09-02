@@ -6,3 +6,4 @@ gunicorn
 peewee
 psycopg2
 category_encoders==1.2.6
+pytest

@@ -12,6 +12,7 @@ peewee = "*"
 "psycopg2" = "*"
 Flask = "*"
 category_encoders = "==1.2.6"
+pytest = "*"
 
 [dev-packages]
 
