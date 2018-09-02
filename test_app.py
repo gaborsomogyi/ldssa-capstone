@@ -2,7 +2,7 @@ import os
 import tempfile
 
 import pytest
-from app import app as the_app
+from app import create_app
 
 
 @pytest.fixture
@@ -10,18 +10,13 @@ def app():
     """Create and configure a new app instance for each test."""
     # create a temporary file to isolate the database for each test
     db_fd, db_path = tempfile.mkstemp()
-    app = the_app
+
     # create the app with common test config
-    """
     app = create_app({
         'TESTING': True,
         'DATABASE': db_path,
     })
 
-    # create the database and load test data
-    with app.app_context():
-        init_db()
-    """
     yield app
 
     # close and remove the temporary database
@@ -59,6 +54,6 @@ def test_duplicate_observation(client):
                                                                "Embarked": "S", "Fare": 7.25, "Parch": 0, "Pclass": 3, "Sex": "male", "SibSp": 1}})
         resp = rv.get_json()
         assert resp == {
-            'error': 'Observation ID: "0" already exists', 'proba': 0.09500452074453283
-            # 'proba': 0.09500452074453283
+            # 'error': 'Observation ID: "0" already exists', 'proba': 0.09500452074453283
+            'proba': 0.09500452074453283
         }

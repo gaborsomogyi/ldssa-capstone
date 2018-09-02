@@ -5,7 +5,8 @@ stages:
 
 test:
   stage: test
-  script: echo "Running tests"
+  image: 'python:3.6'
+  script: pytest -v
 
 deploy_staging:
   stage: deploy_staging
