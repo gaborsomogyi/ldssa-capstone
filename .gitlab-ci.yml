@@ -9,9 +9,8 @@ test:
   before_script:
     - pip install pipenv
     - pipenv install
-    - pipenv shell
   script: 
-    - pytest -v
+    - pipenv shell -c "pytest -v"
 
 deploy_staging:
   stage: deploy_staging
