@@ -28,6 +28,11 @@ if 'DATABASE_URL' in os.environ:
         host=host,
         port=port,
     )
+
+# when testing, use memory-based database
+elif os.environ['TESTING']:
+    DB = SqliteDatabase(':memory:')
+
 else:
     DB = SqliteDatabase('predictions.db')
 
