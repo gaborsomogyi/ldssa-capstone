@@ -7,7 +7,9 @@ test:
   stage: test
   image: 'python:3.6'
   before_script:
-    - pip install pipenv && pipenv install
+    - pip install pipenv
+    - pipenv install
+    - pipenv shell
   script: 
     - pytest -v
 
