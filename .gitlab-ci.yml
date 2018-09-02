@@ -6,7 +6,10 @@ stages:
 test:
   stage: test
   image: 'python:3.6'
-  script: pytest -v
+  before_script:
+    - pip install -r requirements.txt
+  script: 
+    - pytest -v
 
 deploy_staging:
   stage: deploy_staging
