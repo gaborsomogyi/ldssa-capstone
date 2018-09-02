@@ -8,9 +8,9 @@ test:
   image: 'python:3.6'
   before_script:
     - pip install pipenv
-    - pipenv install
+    - pipenv install --dev
   script: 
-    - pipenv shell -c "pytest -v"
+    - pipenv run pytest -v
 
 deploy_staging:
   stage: deploy_staging
