@@ -11,115 +11,116 @@ from peewee import (
 from playhouse.shortcuts import model_to_dict
 
 
-########################################
-# Begin database stuff
+def create_app(test_config=None):
+    app = Flask(__name__)
 
-if 'DATABASE_URL' in os.environ:
-    db_url = os.environ['DATABASE_URL']
-    dbname = db_url.split('@')[1].split('/')[1]
-    user = db_url.split('@')[0].split(':')[1].lstrip('//')
-    password = db_url.split('@')[0].split(':')[2]
-    host = db_url.split('@')[1].split('/')[0].split(':')[0]
-    port = db_url.split('@')[1].split('/')[0].split(':')[1]
-    DB = PostgresqlDatabase(
-        dbname,
-        user=user,
-        password=password,
-        host=host,
-        port=port,
-    )
-else:
-    DB = SqliteDatabase('predictions.db')
+    ########################################
+    # Begin database stuff
 
+    # when testing, use temporary database defined in test config
+    if test_config is not None and test_config['TESTING']:
+        DB = SqliteDatabase(test_config['DATABASE'])
 
-class Prediction(Model):
-    observation_id = IntegerField(unique=True)
-    observation = TextField()
-    proba = FloatField()
-    true_class = IntegerField(null=True)
+    elif 'DATABASE_URL' in os.environ:
+        db_url = os.environ['DATABASE_URL']
+        dbname = db_url.split('@')[1].split('/')[1]
+        user = db_url.split('@')[0].split(':')[1].lstrip('//')
+        password = db_url.split('@')[0].split(':')[2]
+        host = db_url.split('@')[1].split('/')[0].split(':')[0]
+        port = db_url.split('@')[1].split('/')[0].split(':')[1]
+        DB = PostgresqlDatabase(
+            dbname,
+            user=user,
+            password=password,
+            host=host,
+            port=port,
+        )
 
-    class Meta:
-        database = DB
+    else:
+        DB = SqliteDatabase('predictions.db')
 
+    class Prediction(Model):
+        observation_id = IntegerField(unique=True)
+        observation = TextField()
+        proba = FloatField()
+        true_class = IntegerField(null=True)
 
-DB.create_tables([Prediction], safe=True)
+        class Meta:
+            database = DB
 
-# End database stuff
-########################################
+    DB.create_tables([Prediction], safe=True)
 
-########################################
-# Unpickle the previously-trained model
+    # End database stuff
+    ########################################
 
+    ########################################
+    # Unpickle the previously-trained model
 
-with open('pipeline/columns.json') as fh:
-    columns = json.load(fh)
+    with open('pipeline/columns.json') as fh:
+        columns = json.load(fh)
 
-pipeline = joblib.load('pipeline/pipeline.pickle')
+    pipeline = joblib.load('pipeline/pipeline.pickle')
 
-with open('pipeline/dtypes.pickle', 'rb') as fh:
-    dtypes = pickle.load(fh)
+    with open('pipeline/dtypes.pickle', 'rb') as fh:
+        dtypes = pickle.load(fh)
 
+    # End model un-pickling
+    ########################################
 
-# End model un-pickling
-########################################
+    ########################################
+    # Begin webserver stuff
 
+    @app.route('/predict', methods=['POST'])
+    def predict():
+        # flask provides a deserialization convenience function called
+        # get_json that will work if the mimetype is application/json
+        obs_dict = request.get_json()
+        _id = obs_dict['id']
+        observation = obs_dict['observation']
+        # now do what we already learned in the notebooks about how to transform
+        # a single observation into a dataframe that will work with a pipeline
+        obs = pd.DataFrame([observation], columns=columns).astype(dtypes)
+        # now get ourselves an actual prediction of the positive class
+        proba = pipeline.predict_proba(obs)[0, 1]
+        response = {'proba': proba}
+        p = Prediction(
+            observation_id=_id,
+            proba=proba,
+            observation=request.data
+        )
+        try:
+            p.save()
+        except IntegrityError:
+            error_msg = 'Observation ID: "{}" already exists'.format(_id)
+            response['error'] = error_msg
+            print(error_msg)
+            DB.rollback()
+        return jsonify(response)
 
-########################################
-# Begin webserver stuff
+    @app.route('/update', methods=['POST'])
+    def update():
+        obs = request.get_json()
+        try:
+            p = Prediction.get(Prediction.observation_id == obs['id'])
+            p.true_class = obs['true_class']
+            p.save()
+            return jsonify(model_to_dict(p))
+        except Prediction.DoesNotExist:
+            error_msg = 'Observation ID: "{}" does not exist'.format(obs['id'])
+            return jsonify({'error': error_msg})
 
-app = Flask(__name__)
+    @app.route('/list-db-contents')
+    def list_db_contents():
+        return jsonify([
+            model_to_dict(obs) for obs in Prediction.select()
+        ])
 
+    # End webserver stuff
+    ########################################
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    # flask provides a deserialization convenience function called
-    # get_json that will work if the mimetype is application/json
-    obs_dict = request.get_json()
-    _id = obs_dict['id']
-    observation = obs_dict['observation']
-    # now do what we already learned in the notebooks about how to transform
-    # a single observation into a dataframe that will work with a pipeline
-    obs = pd.DataFrame([observation], columns=columns).astype(dtypes)
-    # now get ourselves an actual prediction of the positive class
-    proba = pipeline.predict_proba(obs)[0, 1]
-    response = {'proba': proba}
-    p = Prediction(
-        observation_id=_id,
-        proba=proba,
-        observation=request.data
-    )
-    try:
-        p.save()
-    except IntegrityError:
-        error_msg = 'Observation ID: "{}" already exists'.format(_id)
-        response['error'] = error_msg
-        print(error_msg)
-        DB.rollback()
-    return jsonify(response)
+    return app
 
-
-@app.route('/update', methods=['POST'])
-def update():
-    obs = request.get_json()
-    try:
-        p = Prediction.get(Prediction.observation_id == obs['id'])
-        p.true_class = obs['true_class']
-        p.save()
-        return jsonify(model_to_dict(p))
-    except Prediction.DoesNotExist:
-        error_msg = 'Observation ID: "{}" does not exist'.format(obs['id'])
-        return jsonify({'error': error_msg})
-
-
-@app.route('/list-db-contents')
-def list_db_contents():
-    return jsonify([
-        model_to_dict(obs) for obs in Prediction.select()
-    ])
-
-
-# End webserver stuff
-########################################
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(debug=True, port=5000)
