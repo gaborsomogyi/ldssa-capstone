@@ -39,21 +39,23 @@ def test_empty_db_contents(client):
 
 def test_new_observation(client):
     with client as c:
-        rv = c.post('/predict', json={"id": 0, "observation": {"Age": 22.0, "Cabin": 'null',
-                                                               "Embarked": "S", "Fare": 7.25, "Parch": 0, "Pclass": 3, "Sex": "male", "SibSp": 1}})
+        rv = c.post('/predict', json={"id": 0, "observation": {"m_or_f": "m", "person_attributes": "driving", "seat": "front_left",
+                    "other_person_location": "N/A", "other_factor_1": "N/A", "other_factor_2": "N/A", "other_factor_3": "N/A", "age_in_years": "50"
+                                                               }})
         resp = rv.get_json()
-        assert resp == {
-            # 'error': 'Observation ID: "0" already exists', 'proba': 0.09500452074453283
-            'proba': 0.09500452074453283
-        }
+        # the return json only includes the probability
+        assert list(resp.keys()) == ['proba']
+        # probability is a float between 0 and 1
+        assert resp['proba'] >= 0 and resp['proba'] <= 1 and type(resp['proba']) == float
 
 
 def test_duplicate_observation(client):
     with client as c:
-        rv = c.post('/predict', json={"id": 0, "observation": {"Age": 22.0, "Cabin": 'null',
-                                                               "Embarked": "S", "Fare": 7.25, "Parch": 0, "Pclass": 3, "Sex": "male", "SibSp": 1}})
+        rv = c.post('/predict', json={"id": 0, "observation": {"m_or_f": "m", "person_attributes": "driving", "seat": "front_left",
+                    "other_person_location": "N/A", "other_factor_1": "N/A", "other_factor_2": "N/A", "other_factor_3": "N/A", "age_in_years": "50"
+                                                               }})
         resp = rv.get_json()
-        assert resp == {
-            # 'error': 'Observation ID: "0" already exists', 'proba': 0.09500452074453283
-            'proba': 0.09500452074453283
-        }
+        # the return json only includes the probability
+        assert list(resp.keys()) == ['proba']
+        # probability is a float between 0 and 1
+        assert resp['proba'] >= 0 and resp['proba'] <= 1 and type(resp['proba']) == float
