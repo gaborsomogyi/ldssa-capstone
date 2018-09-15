@@ -81,7 +81,7 @@ def create_app(test_config=None):
         # a single observation into a dataframe that will work with a pipeline
         obs = pd.DataFrame([observation], columns=columns).astype(dtypes)
         # now get ourselves an actual prediction of the positive class
-        proba = pipeline.predict_proba(obs)[0, 1]
+        proba = float(pipeline.predict_proba(obs)[0, 1])
         response = {'proba': proba}
         p = Prediction(
             observation_id=_id,
