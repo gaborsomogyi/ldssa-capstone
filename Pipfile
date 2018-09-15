@@ -13,6 +13,8 @@ peewee = "*"
 Flask = "*"
 category_encoders = "==1.2.6"
 pytest = "*"
+xgboost = "*"
+numpy = "*"
 
 [dev-packages]
 
