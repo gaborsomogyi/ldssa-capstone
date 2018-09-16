@@ -1,5 +1,6 @@
 import os
 import tempfile
+import numpy as np
 
 import pytest
 from app import create_app
@@ -54,6 +55,18 @@ def test_duplicate_observation(client):
         rv = c.post('/predict', json={"id": 0, "observation": {"m_or_f": "m", "person_attributes": "driving", "seat": "front_left",
                     "other_person_location": "N/A", "other_factor_1": "N/A", "other_factor_2": "N/A", "other_factor_3": "N/A", "age_in_years": "50"
                                                                }})
+        resp = rv.get_json()
+        # the return json only includes the probability
+        assert list(resp.keys()) == ['proba']
+        # probability is a float between 0 and 1
+        assert resp['proba'] >= 0 and resp['proba'] <= 1 and type(resp['proba']) == float
+
+
+def test_na_observation(client):
+    with client as c:
+        rv = c.post('/predict', json={"id": 12, "observation": {"m_or_f": "m", "person_attributes": np.nan, "seat": "front_left",
+                    "other_person_location": "N/A", "other_factor_1": "N/A", "other_factor_2": "N/A", "other_factor_3": np.nan, "age_in_years": np.nan
+                                                                }})
         resp = rv.get_json()
         # the return json only includes the probability
         assert list(resp.keys()) == ['proba']
