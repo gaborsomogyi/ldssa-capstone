@@ -72,6 +72,10 @@ def create_app(test_config=None):
 
     @app.route('/predict', methods=['POST'])
     def predict():
+        try:
+            app.logger.info('prediction request: {}'.format(request.get_json()))
+        except Exception:
+            app.logger.error('error parsing prediction request!')
         # flask provides a deserialization convenience function called
         # get_json that will work if the mimetype is application/json
         obs_dict = request.get_json()
@@ -99,6 +103,11 @@ def create_app(test_config=None):
 
     @app.route('/update', methods=['POST'])
     def update():
+        try:
+            app.logger.info('update request: {}'.format(request.get_json(silent=True)))
+        except Exception:
+            app.logger.error('error parsing update request!')
+
         obs = request.get_json()
         try:
             p = Prediction.get(Prediction.observation_id == obs['id'])
