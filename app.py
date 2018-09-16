@@ -1,4 +1,6 @@
 import os
+import sys
+import logging
 import json
 import pickle
 from sklearn.externals import joblib
@@ -13,6 +15,8 @@ from playhouse.shortcuts import model_to_dict
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    app.logger.addHandler(logging.StreamHandler(sys.stdout))
+    app.logger.setLevel(logging.INFO)
 
     ########################################
     # Begin database stuff
