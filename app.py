@@ -66,7 +66,8 @@ def create_app(test_config=None):
     pipeline = joblib.load('pipeline/pipeline.pickle')
 
     with open('pipeline/dtypes.pickle', 'rb') as fh:
-        dtypes = pickle.load(fh)
+        # convert ints to float to allow np
+        dtypes = pickle.load(fh).apply(lambda x: float if x == int else x)
 
     # End model un-pickling
     ########################################
