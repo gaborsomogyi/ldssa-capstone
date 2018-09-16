@@ -72,3 +72,15 @@ def test_na_observation(client):
         assert list(resp.keys()) == ['proba']
         # probability is a float between 0 and 1
         assert resp['proba'] >= 0 and resp['proba'] <= 1 and type(resp['proba']) == float
+
+
+def test_reordered_observation(client):
+    with client as c:
+        rv = c.post('/predict', json={"id": 12, "observation": {"other_factor_3": np.nan, "person_attributes": np.nan, "seat": "front_left",
+                    "other_person_location": "N/A", "other_factor_1": "N/A", "other_factor_2": "N/A", "age_in_years": np.nan, "m_or_f": "m"
+                                                                }})
+        resp = rv.get_json()
+        # the return json only includes the probability
+        assert list(resp.keys()) == ['proba']
+        # probability is a float between 0 and 1
+        assert resp['proba'] >= 0 and resp['proba'] <= 1 and type(resp['proba']) == float
