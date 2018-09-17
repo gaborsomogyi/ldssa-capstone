@@ -9,7 +9,7 @@ import numpy as np
 from flask import Flask, jsonify, request
 from peewee import (
     SqliteDatabase, PostgresqlDatabase, Model, IntegerField,
-    FloatField, TextField, IntegrityError
+    FloatField, TextField, IntegrityError, InterfaceError
 )
 from playhouse.shortcuts import model_to_dict
 
@@ -114,6 +114,14 @@ def create_app(test_config=None):
             response['error'] = error_msg
             print(error_msg)
             DB.rollback()
+        except InterfaceError:
+            app.logger.error('database connection error on predict')
+
+        # fail silently on database error, don't miss out on predictions
+        except Exception as e:
+            app.logger.error('other database error on predict: {}'.format(e))
+
+        # respond with the predicted probability even on a database error
         return jsonify(response)
 
     @app.route('/update', methods=['POST'])
@@ -132,6 +140,14 @@ def create_app(test_config=None):
         except Prediction.DoesNotExist:
             error_msg = 'Observation ID: "{}" does not exist'.format(obs['id'])
             return jsonify({'error': error_msg})
+        except InterfaceError:
+            app.logger.error('database connection error on update')
+        except Exception as e:
+            app.logger.error('other database error on update: {}'.format(e))
+
+        # provide a return message even on internal error, as the data is recoverable from the logs
+        error_msg = 'Some internal error happened. Observation ID: "{}" recorded'.format(obs['id'])
+        return jsonify({'error': error_msg})
 
     @app.route('/list-db-contents')
     def list_db_contents():
