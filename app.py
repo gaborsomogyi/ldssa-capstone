@@ -5,6 +5,7 @@ import json
 import pickle
 from sklearn.externals import joblib
 import pandas as pd
+import numpy as np
 from flask import Flask, jsonify, request
 from peewee import (
     SqliteDatabase, PostgresqlDatabase, Model, IntegerField,
@@ -86,6 +87,15 @@ def create_app(test_config=None):
         obs_dict = request.get_json()
         _id = obs_dict['id']
         observation = obs_dict['observation']
+
+        # for non-object columns, try to convert the values individually, and if it fails, use nan instead
+        # this makes sure that an incoming string will be interpreted as NaNs in numerical columns
+        for key, value in list(zip(dtypes.keys(), dtypes.values)):
+            if (value != object):
+                try:
+                    observation[key] = value(observation[key])
+                except ValueError:
+                    observation[key] = np.nan
         # now do what we already learned in the notebooks about how to transform
         # a single observation into a dataframe that will work with a pipeline
         obs = pd.DataFrame([observation], columns=columns).astype(dtypes)
